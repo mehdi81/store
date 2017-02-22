@@ -8,6 +8,7 @@
             "entities": {
                 "main": "Entitäten",
                 "wishlist": "Wishlist",
+                "wish": "Wish",
                 "jhipster-needle-menu-add-entry": "JHipster will add additional entities here (do not translate!)"
             },
             "account": {
