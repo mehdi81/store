@@ -1,0 +1,25 @@
+{
+    "storeApp": {
+        "wishlist" : {
+            "home": {
+                "title": "Wishlists",
+                "createLabel": "Create a new Wishlist",
+                "createOrEditLabel": "Create or edit a Wishlist",
+                "search": "Search for Wishlist"
+            },
+            "created": "A new Wishlist is created with identifier {{ param }}",
+            "updated": "A Wishlist is updated with identifier {{ param }}",
+            "deleted": "A Wishlist is deleted with identifier {{ param }}",
+            "delete": {
+                "question": "Are you sure you want to delete Wishlist {{ id }}?"
+            },
+            "detail": {
+                "title": "Wishlist"
+            },
+            "name": "Name",
+            "creationDate": "Creation Date",
+            "hidden": "Hidden",
+            "user": "User"
+        }
+    }
+}

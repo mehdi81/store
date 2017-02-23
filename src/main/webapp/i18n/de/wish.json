@@ -1,0 +1,24 @@
+{
+    "storeApp": {
+        "wish" : {
+            "home": {
+                "title": "Wishes",
+                "createLabel": "Wish erstellen",
+                "createOrEditLabel": "Wish erstellen oder bearbeiten",
+                "search": "Suche nach Wish"
+            },
+            "created": "Wish erstellt mit ID {{ param }}",
+            "updated": "Wish aktualisiert mit ID {{ param }}",
+            "deleted": "Wish gelöscht mit ID {{ param }}",
+            "delete": {
+                "question": "Soll Wish {{ id }} wirklich dauerhaft gelöscht werden?"
+            },
+            "detail": {
+                "title": "Wish"
+            },
+            "productId": "Product Id",
+            "price": "Price",
+            "wishlist": "Wishlist"
+        }
+    }
+}

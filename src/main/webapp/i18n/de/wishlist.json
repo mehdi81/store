@@ -1,0 +1,25 @@
+{
+    "storeApp": {
+        "wishlist" : {
+            "home": {
+                "title": "Wishlists",
+                "createLabel": "Wishlist erstellen",
+                "createOrEditLabel": "Wishlist erstellen oder bearbeiten",
+                "search": "Suche nach Wishlist"
+            },
+            "created": "Wishlist erstellt mit ID {{ param }}",
+            "updated": "Wishlist aktualisiert mit ID {{ param }}",
+            "deleted": "Wishlist gelöscht mit ID {{ param }}",
+            "delete": {
+                "question": "Soll Wishlist {{ id }} wirklich dauerhaft gelöscht werden?"
+            },
+            "detail": {
+                "title": "Wishlist"
+            },
+            "name": "Name",
+            "creationDate": "Creation Date",
+            "hidden": "Hidden",
+            "user": "User"
+        }
+    }
+}
