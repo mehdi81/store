@@ -20,7 +20,7 @@ public class Wish implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotNull
@@ -91,7 +91,7 @@ public class Wish implements Serializable {
             return false;
         }
         Wish wish = (Wish) o;
-        if(wish.id == null || id == null) {
+        if (wish.id == null || id == null) {
             return false;
         }
         return Objects.equals(id, wish.id);

@@ -3,7 +3,7 @@
     <h2><span data-translate="storeApp.wishlist.detail.title">Wishlist</span> {{vm.wishlist.id}}</h2>
     <hr>
     <jhi-alert-error></jhi-alert-error>
-    <dl class="dl-horizontal jh-entity-details">
+    <dl class="row jh-entity-details">
         <dt><span data-translate="storeApp.wishlist.name">Name</span></dt>
         <dd>
             <span>{{vm.wishlist.name}}</span>
@@ -30,6 +30,6 @@
 
     <button type="button" ui-sref="wishlist-detail.edit({id:vm.wishlist.id})" class="btn btn-primary">
         <span class="glyphicon glyphicon-pencil"></span>
-        <span class="hidden-xs hidden-sm" data-translate="entity.action.edit"> Edit</span>
+        <span class="hidden-sm-down" data-translate="entity.action.edit"> Edit</span>
     </button>
 </div>

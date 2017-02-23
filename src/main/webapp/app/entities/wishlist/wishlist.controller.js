@@ -5,11 +5,12 @@
         .module('storeApp')
         .controller('WishlistController', WishlistController);
 
-    WishlistController.$inject = ['$scope', '$state', 'Wishlist'];
+    WishlistController.$inject = ['Wishlist'];
 
-    function WishlistController ($scope, $state, Wishlist) {
+    function WishlistController(Wishlist) {
+
         var vm = this;
-        
+
         vm.wishlists = [];
 
         loadAll();
@@ -17,6 +18,7 @@
         function loadAll() {
             Wishlist.query(function(result) {
                 vm.wishlists = result;
+                vm.searchQuery = null;
             });
         }
     }

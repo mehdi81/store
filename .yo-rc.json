@@ -1,6 +1,6 @@
 {
   "generator-jhipster": {
-    "jhipsterVersion": "3.9.0",
+    "jhipsterVersion": "4.0.6",
     "baseName": "store",
     "packageName": "org.devoxx.store",
     "packageFolder": "org/devoxx/store",
@@ -30,6 +30,8 @@
       "en",
       "de"
     ],
-    "serviceDiscoveryType": false
+    "serviceDiscoveryType": false,
+    "clientFramework": "angular1",
+    "clientPackageManager": "yarn"
   }
 }

@@ -5,15 +5,12 @@ import org.devoxx.store.domain.Wishlist;
 
 import org.devoxx.store.repository.WishlistRepository;
 import org.devoxx.store.web.rest.util.HeaderUtil;
+import io.github.jhipster.web.util.ResponseUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.inject.Inject;
 import javax.validation.Valid;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -28,9 +25,14 @@ import java.util.Optional;
 public class WishlistResource {
 
     private final Logger log = LoggerFactory.getLogger(WishlistResource.class);
+
+    private static final String ENTITY_NAME = "wishlist";
         
-    @Inject
-    private WishlistRepository wishlistRepository;
+    private final WishlistRepository wishlistRepository;
+
+    public WishlistResource(WishlistRepository wishlistRepository) {
+        this.wishlistRepository = wishlistRepository;
+    }
 
     /**
      * POST  /wishlists : Create a new wishlist.
@@ -39,18 +41,16 @@ public class WishlistResource {
      * @return the ResponseEntity with status 201 (Created) and with body the new wishlist, or with status 400 (Bad Request) if the wishlist has already an ID
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
-    @RequestMapping(value = "/wishlists",
-        method = RequestMethod.POST,
-        produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping("/wishlists")
     @Timed
     public ResponseEntity<Wishlist> createWishlist(@Valid @RequestBody Wishlist wishlist) throws URISyntaxException {
         log.debug("REST request to save Wishlist : {}", wishlist);
         if (wishlist.getId() != null) {
-            return ResponseEntity.badRequest().headers(HeaderUtil.createFailureAlert("wishlist", "idexists", "A new wishlist cannot already have an ID")).body(null);
+            return ResponseEntity.badRequest().headers(HeaderUtil.createFailureAlert(ENTITY_NAME, "idexists", "A new wishlist cannot already have an ID")).body(null);
         }
         Wishlist result = wishlistRepository.save(wishlist);
         return ResponseEntity.created(new URI("/api/wishlists/" + result.getId()))
-            .headers(HeaderUtil.createEntityCreationAlert("wishlist", result.getId().toString()))
+            .headers(HeaderUtil.createEntityCreationAlert(ENTITY_NAME, result.getId().toString()))
             .body(result);
     }
 
@@ -63,9 +63,7 @@ public class WishlistResource {
      * or with status 500 (Internal Server Error) if the wishlist couldnt be updated
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
-    @RequestMapping(value = "/wishlists",
-        method = RequestMethod.PUT,
-        produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping("/wishlists")
     @Timed
     public ResponseEntity<Wishlist> updateWishlist(@Valid @RequestBody Wishlist wishlist) throws URISyntaxException {
         log.debug("REST request to update Wishlist : {}", wishlist);
@@ -74,7 +72,7 @@ public class WishlistResource {
         }
         Wishlist result = wishlistRepository.save(wishlist);
         return ResponseEntity.ok()
-            .headers(HeaderUtil.createEntityUpdateAlert("wishlist", wishlist.getId().toString()))
+            .headers(HeaderUtil.createEntityUpdateAlert(ENTITY_NAME, wishlist.getId().toString()))
             .body(result);
     }
 
@@ -83,9 +81,7 @@ public class WishlistResource {
      *
      * @return the ResponseEntity with status 200 (OK) and the list of wishlists in body
      */
-    @RequestMapping(value = "/wishlists",
-        method = RequestMethod.GET,
-        produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping("/wishlists")
     @Timed
     public List<Wishlist> getAllWishlists() {
         log.debug("REST request to get all Wishlists");
@@ -99,18 +95,12 @@ public class WishlistResource {
      * @param id the id of the wishlist to retrieve
      * @return the ResponseEntity with status 200 (OK) and with body the wishlist, or with status 404 (Not Found)
      */
-    @RequestMapping(value = "/wishlists/{id}",
-        method = RequestMethod.GET,
-        produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping("/wishlists/{id}")
     @Timed
     public ResponseEntity<Wishlist> getWishlist(@PathVariable Long id) {
         log.debug("REST request to get Wishlist : {}", id);
         Wishlist wishlist = wishlistRepository.findOne(id);
-        return Optional.ofNullable(wishlist)
-            .map(result -> new ResponseEntity<>(
-                result,
-                HttpStatus.OK))
-            .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        return ResponseUtil.wrapOrNotFound(Optional.ofNullable(wishlist));
     }
 
     /**
@@ -119,14 +109,12 @@ public class WishlistResource {
      * @param id the id of the wishlist to delete
      * @return the ResponseEntity with status 200 (OK)
      */
-    @RequestMapping(value = "/wishlists/{id}",
-        method = RequestMethod.DELETE,
-        produces = MediaType.APPLICATION_JSON_VALUE)
+    @DeleteMapping("/wishlists/{id}")
     @Timed
     public ResponseEntity<Void> deleteWishlist(@PathVariable Long id) {
         log.debug("REST request to delete Wishlist : {}", id);
         wishlistRepository.delete(id);
-        return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert("wishlist", id.toString())).build();
+        return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert(ENTITY_NAME, id.toString())).build();
     }
 
 }

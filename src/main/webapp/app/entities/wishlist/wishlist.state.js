@@ -32,7 +32,7 @@
             }
         })
         .state('wishlist-detail', {
-            parent: 'entity',
+            parent: 'wishlist',
             url: '/wishlist/{id}',
             data: {
                 authorities: ['ROLE_USER'],

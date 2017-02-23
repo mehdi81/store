@@ -4,7 +4,7 @@
     angular
         .module('storeApp')
         .filter('characters', characters);
-        
+
     function characters () {
         return charactersFilter;
 

@@ -5,29 +5,28 @@ import org.devoxx.store.StoreApp;
 import org.devoxx.store.domain.Wish;
 import org.devoxx.store.repository.WishRepository;
 import org.devoxx.store.service.WishService;
+import org.devoxx.store.web.rest.errors.ExceptionTranslator;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import static org.hamcrest.Matchers.hasItem;
 import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.PostConstruct;
-import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import java.math.BigDecimal;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -46,32 +45,35 @@ public class WishResourceIntTest {
     private static final BigDecimal DEFAULT_PRICE = new BigDecimal(0);
     private static final BigDecimal UPDATED_PRICE = new BigDecimal(1);
 
-    @Inject
+    @Autowired
     private WishRepository wishRepository;
 
-    @Inject
+    @Autowired
     private WishService wishService;
 
-    @Inject
+    @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
 
-    @Inject
+    @Autowired
     private PageableHandlerMethodArgumentResolver pageableArgumentResolver;
 
-    @Inject
+    @Autowired
+    private ExceptionTranslator exceptionTranslator;
+
+    @Autowired
     private EntityManager em;
 
     private MockMvc restWishMockMvc;
 
     private Wish wish;
 
-    @PostConstruct
+    @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        WishResource wishResource = new WishResource();
-        ReflectionTestUtils.setField(wishResource, "wishService", wishService);
+        WishResource wishResource = new WishResource(wishService);
         this.restWishMockMvc = MockMvcBuilders.standaloneSetup(wishResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)
+            .setControllerAdvice(exceptionTranslator)
             .setMessageConverters(jacksonMessageConverter).build();
     }
 
@@ -101,16 +103,36 @@ public class WishResourceIntTest {
         // Create the Wish
 
         restWishMockMvc.perform(post("/api/wishes")
-                .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                .content(TestUtil.convertObjectToJsonBytes(wish)))
-                .andExpect(status().isCreated());
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(wish)))
+            .andExpect(status().isCreated());
 
         // Validate the Wish in the database
-        List<Wish> wishes = wishRepository.findAll();
-        assertThat(wishes).hasSize(databaseSizeBeforeCreate + 1);
-        Wish testWish = wishes.get(wishes.size() - 1);
+        List<Wish> wishList = wishRepository.findAll();
+        assertThat(wishList).hasSize(databaseSizeBeforeCreate + 1);
+        Wish testWish = wishList.get(wishList.size() - 1);
         assertThat(testWish.getProductId()).isEqualTo(DEFAULT_PRODUCT_ID);
         assertThat(testWish.getPrice()).isEqualTo(DEFAULT_PRICE);
+    }
+
+    @Test
+    @Transactional
+    public void createWishWithExistingId() throws Exception {
+        int databaseSizeBeforeCreate = wishRepository.findAll().size();
+
+        // Create the Wish with an existing ID
+        Wish existingWish = new Wish();
+        existingWish.setId(1L);
+
+        // An entity with an existing ID cannot be created, so this API call must fail
+        restWishMockMvc.perform(post("/api/wishes")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(existingWish)))
+            .andExpect(status().isBadRequest());
+
+        // Validate the Alice in the database
+        List<Wish> wishList = wishRepository.findAll();
+        assertThat(wishList).hasSize(databaseSizeBeforeCreate);
     }
 
     @Test
@@ -123,12 +145,12 @@ public class WishResourceIntTest {
         // Create the Wish, which fails.
 
         restWishMockMvc.perform(post("/api/wishes")
-                .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                .content(TestUtil.convertObjectToJsonBytes(wish)))
-                .andExpect(status().isBadRequest());
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(wish)))
+            .andExpect(status().isBadRequest());
 
-        List<Wish> wishes = wishRepository.findAll();
-        assertThat(wishes).hasSize(databaseSizeBeforeTest);
+        List<Wish> wishList = wishRepository.findAll();
+        assertThat(wishList).hasSize(databaseSizeBeforeTest);
     }
 
     @Test
@@ -141,12 +163,12 @@ public class WishResourceIntTest {
         // Create the Wish, which fails.
 
         restWishMockMvc.perform(post("/api/wishes")
-                .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                .content(TestUtil.convertObjectToJsonBytes(wish)))
-                .andExpect(status().isBadRequest());
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(wish)))
+            .andExpect(status().isBadRequest());
 
-        List<Wish> wishes = wishRepository.findAll();
-        assertThat(wishes).hasSize(databaseSizeBeforeTest);
+        List<Wish> wishList = wishRepository.findAll();
+        assertThat(wishList).hasSize(databaseSizeBeforeTest);
     }
 
     @Test
@@ -155,13 +177,13 @@ public class WishResourceIntTest {
         // Initialize the database
         wishRepository.saveAndFlush(wish);
 
-        // Get all the wishes
+        // Get all the wishList
         restWishMockMvc.perform(get("/api/wishes?sort=id,desc"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-                .andExpect(jsonPath("$.[*].id").value(hasItem(wish.getId().intValue())))
-                .andExpect(jsonPath("$.[*].productId").value(hasItem(DEFAULT_PRODUCT_ID.intValue())))
-                .andExpect(jsonPath("$.[*].price").value(hasItem(DEFAULT_PRICE.intValue())));
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(wish.getId().intValue())))
+            .andExpect(jsonPath("$.[*].productId").value(hasItem(DEFAULT_PRODUCT_ID.intValue())))
+            .andExpect(jsonPath("$.[*].price").value(hasItem(DEFAULT_PRICE.intValue())));
     }
 
     @Test
@@ -184,7 +206,7 @@ public class WishResourceIntTest {
     public void getNonExistingWish() throws Exception {
         // Get the wish
         restWishMockMvc.perform(get("/api/wishes/{id}", Long.MAX_VALUE))
-                .andExpect(status().isNotFound());
+            .andExpect(status().isNotFound());
     }
 
     @Test
@@ -202,16 +224,34 @@ public class WishResourceIntTest {
                 .price(UPDATED_PRICE);
 
         restWishMockMvc.perform(put("/api/wishes")
-                .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                .content(TestUtil.convertObjectToJsonBytes(updatedWish)))
-                .andExpect(status().isOk());
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(updatedWish)))
+            .andExpect(status().isOk());
 
         // Validate the Wish in the database
-        List<Wish> wishes = wishRepository.findAll();
-        assertThat(wishes).hasSize(databaseSizeBeforeUpdate);
-        Wish testWish = wishes.get(wishes.size() - 1);
+        List<Wish> wishList = wishRepository.findAll();
+        assertThat(wishList).hasSize(databaseSizeBeforeUpdate);
+        Wish testWish = wishList.get(wishList.size() - 1);
         assertThat(testWish.getProductId()).isEqualTo(UPDATED_PRODUCT_ID);
         assertThat(testWish.getPrice()).isEqualTo(UPDATED_PRICE);
+    }
+
+    @Test
+    @Transactional
+    public void updateNonExistingWish() throws Exception {
+        int databaseSizeBeforeUpdate = wishRepository.findAll().size();
+
+        // Create the Wish
+
+        // If the entity doesn't have an ID, it will be created instead of just being updated
+        restWishMockMvc.perform(put("/api/wishes")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(wish)))
+            .andExpect(status().isCreated());
+
+        // Validate the Wish in the database
+        List<Wish> wishList = wishRepository.findAll();
+        assertThat(wishList).hasSize(databaseSizeBeforeUpdate + 1);
     }
 
     @Test
@@ -224,11 +264,16 @@ public class WishResourceIntTest {
 
         // Get the wish
         restWishMockMvc.perform(delete("/api/wishes/{id}", wish.getId())
-                .accept(TestUtil.APPLICATION_JSON_UTF8))
-                .andExpect(status().isOk());
+            .accept(TestUtil.APPLICATION_JSON_UTF8))
+            .andExpect(status().isOk());
 
         // Validate the database is empty
-        List<Wish> wishes = wishRepository.findAll();
-        assertThat(wishes).hasSize(databaseSizeBeforeDelete - 1);
+        List<Wish> wishList = wishRepository.findAll();
+        assertThat(wishList).hasSize(databaseSizeBeforeDelete - 1);
+    }
+
+    @Test
+    public void equalsVerifier() throws Exception {
+        TestUtil.equalsVerifier(Wish.class);
     }
 }

@@ -9,9 +9,7 @@
                 "info": "Geben Sie die E-Mail Adresse ein, welche Sie bei der Registrierung verwendet haben.",
                 "success": "Eine E-Mail mit weiteren Instruktionen für das Zurücksetzen des Passworts wurde gesendet.",
                 "notfound": "<strong>Diese E-Mail Adresse existiert nicht!</strong> Überprüfen Sie Ihre E-Mail Adresse und versuchen Sie es nochmal."
-
             }
-
         },
         "finish" : {
             "title": "Passwort zurücksetzen",
@@ -26,5 +24,4 @@
             }
         }
     }
-
 }

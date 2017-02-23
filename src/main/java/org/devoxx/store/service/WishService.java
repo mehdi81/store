@@ -9,7 +9,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
 
-import javax.inject.Inject;
 import java.util.List;
 
 /**
@@ -21,8 +20,11 @@ public class WishService {
 
     private final Logger log = LoggerFactory.getLogger(WishService.class);
     
-    @Inject
-    private WishRepository wishRepository;
+    private final WishRepository wishRepository;
+
+    public WishService(WishRepository wishRepository) {
+        this.wishRepository = wishRepository;
+    }
 
     /**
      * Save a wish.
@@ -42,7 +44,7 @@ public class WishService {
      *  @param pageable the pagination information
      *  @return the list of entities
      */
-    @Transactional(readOnly = true) 
+    @Transactional(readOnly = true)
     public Page<Wish> findAll(Pageable pageable) {
         log.debug("Request to get all Wishes");
         Page<Wish> result = wishRepository.findAll(pageable);
@@ -55,7 +57,7 @@ public class WishService {
      *  @param id the id of the entity
      *  @return the entity
      */
-    @Transactional(readOnly = true) 
+    @Transactional(readOnly = true)
     public Wish findOne(Long id) {
         log.debug("Request to get Wish : {}", id);
         Wish wish = wishRepository.findOne(id);
