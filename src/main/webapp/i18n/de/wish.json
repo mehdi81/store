@@ -4,8 +4,7 @@
             "home": {
                 "title": "Wishes",
                 "createLabel": "Wish erstellen",
-                "createOrEditLabel": "Wish erstellen oder bearbeiten",
-                "search": "Suche nach Wish"
+                "createOrEditLabel": "Wish erstellen oder bearbeiten"
             },
             "created": "Wish erstellt mit ID {{ param }}",
             "updated": "Wish aktualisiert mit ID {{ param }}",

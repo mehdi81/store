@@ -1,11 +1,10 @@
 package org.devoxx.store.security.jwt;
 
-import org.devoxx.store.config.JHipsterProperties;
+import io.github.jhipster.config.JHipsterProperties;
 
 import java.util.*;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
-import javax.inject.Inject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,35 +26,38 @@ public class TokenProvider {
 
     private String secretKey;
 
-    private long tokenValidityInSeconds;
+    private long tokenValidityInMilliseconds;
 
-    private long tokenValidityInSecondsForRememberMe;
+    private long tokenValidityInMillisecondsForRememberMe;
 
-    @Inject
-    private JHipsterProperties jHipsterProperties;
+    private final JHipsterProperties jHipsterProperties;
+
+    public TokenProvider(JHipsterProperties jHipsterProperties) {
+        this.jHipsterProperties = jHipsterProperties;
+    }
 
     @PostConstruct
     public void init() {
         this.secretKey =
             jHipsterProperties.getSecurity().getAuthentication().getJwt().getSecret();
 
-        this.tokenValidityInSeconds =
+        this.tokenValidityInMilliseconds =
             1000 * jHipsterProperties.getSecurity().getAuthentication().getJwt().getTokenValidityInSeconds();
-        this.tokenValidityInSecondsForRememberMe =
+        this.tokenValidityInMillisecondsForRememberMe =
             1000 * jHipsterProperties.getSecurity().getAuthentication().getJwt().getTokenValidityInSecondsForRememberMe();
     }
 
     public String createToken(Authentication authentication, Boolean rememberMe) {
         String authorities = authentication.getAuthorities().stream()
-            .map(authority -> authority.getAuthority())
+            .map(GrantedAuthority::getAuthority)
             .collect(Collectors.joining(","));
 
         long now = (new Date()).getTime();
         Date validity;
         if (rememberMe) {
-            validity = new Date(now + this.tokenValidityInSecondsForRememberMe);
+            validity = new Date(now + this.tokenValidityInMillisecondsForRememberMe);
         } else {
-            validity = new Date(now + this.tokenValidityInSeconds);
+            validity = new Date(now + this.tokenValidityInMilliseconds);
         }
 
         return Jwts.builder()
@@ -73,12 +75,11 @@ public class TokenProvider {
             .getBody();
 
         Collection<? extends GrantedAuthority> authorities =
-            Arrays.asList(claims.get(AUTHORITIES_KEY).toString().split(",")).stream()
-                .map(authority -> new SimpleGrantedAuthority(authority))
+            Arrays.stream(claims.get(AUTHORITIES_KEY).toString().split(","))
+                .map(SimpleGrantedAuthority::new)
                 .collect(Collectors.toList());
 
-        User principal = new User(claims.getSubject(), "",
-            authorities);
+        User principal = new User(claims.getSubject(), "", authorities);
 
         return new UsernamePasswordAuthenticationToken(principal, "", authorities);
     }

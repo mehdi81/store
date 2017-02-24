@@ -4,8 +4,7 @@
             "home": {
                 "title": "Wishlists",
                 "createLabel": "Create a new Wishlist",
-                "createOrEditLabel": "Create or edit a Wishlist",
-                "search": "Search for Wishlist"
+                "createOrEditLabel": "Create or edit a Wishlist"
             },
             "created": "A new Wishlist is created with identifier {{ param }}",
             "updated": "A Wishlist is updated with identifier {{ param }}",

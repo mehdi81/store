@@ -4,30 +4,29 @@ import org.devoxx.store.StoreApp;
 
 import org.devoxx.store.domain.Wishlist;
 import org.devoxx.store.repository.WishlistRepository;
+import org.devoxx.store.web.rest.errors.ExceptionTranslator;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import static org.hamcrest.Matchers.hasItem;
 import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
-import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.PostConstruct;
-import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -40,8 +39,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(classes = StoreApp.class)
 public class WishlistResourceIntTest {
 
-    private static final String DEFAULT_NAME = "AAAAA";
-    private static final String UPDATED_NAME = "BBBBB";
+    private static final String DEFAULT_NAME = "AAAAAAAAAA";
+    private static final String UPDATED_NAME = "BBBBBBBBBB";
 
     private static final LocalDate DEFAULT_CREATION_DATE = LocalDate.ofEpochDay(0L);
     private static final LocalDate UPDATED_CREATION_DATE = LocalDate.now(ZoneId.systemDefault());
@@ -49,29 +48,32 @@ public class WishlistResourceIntTest {
     private static final Boolean DEFAULT_HIDDEN = false;
     private static final Boolean UPDATED_HIDDEN = true;
 
-    @Inject
+    @Autowired
     private WishlistRepository wishlistRepository;
 
-    @Inject
+    @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
 
-    @Inject
+    @Autowired
     private PageableHandlerMethodArgumentResolver pageableArgumentResolver;
 
-    @Inject
+    @Autowired
+    private ExceptionTranslator exceptionTranslator;
+
+    @Autowired
     private EntityManager em;
 
     private MockMvc restWishlistMockMvc;
 
     private Wishlist wishlist;
 
-    @PostConstruct
+    @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        WishlistResource wishlistResource = new WishlistResource();
-        ReflectionTestUtils.setField(wishlistResource, "wishlistRepository", wishlistRepository);
+            WishlistResource wishlistResource = new WishlistResource(wishlistRepository);
         this.restWishlistMockMvc = MockMvcBuilders.standaloneSetup(wishlistResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)
+            .setControllerAdvice(exceptionTranslator)
             .setMessageConverters(jacksonMessageConverter).build();
     }
 
@@ -102,17 +104,37 @@ public class WishlistResourceIntTest {
         // Create the Wishlist
 
         restWishlistMockMvc.perform(post("/api/wishlists")
-                .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                .content(TestUtil.convertObjectToJsonBytes(wishlist)))
-                .andExpect(status().isCreated());
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(wishlist)))
+            .andExpect(status().isCreated());
 
         // Validate the Wishlist in the database
-        List<Wishlist> wishlists = wishlistRepository.findAll();
-        assertThat(wishlists).hasSize(databaseSizeBeforeCreate + 1);
-        Wishlist testWishlist = wishlists.get(wishlists.size() - 1);
+        List<Wishlist> wishlistList = wishlistRepository.findAll();
+        assertThat(wishlistList).hasSize(databaseSizeBeforeCreate + 1);
+        Wishlist testWishlist = wishlistList.get(wishlistList.size() - 1);
         assertThat(testWishlist.getName()).isEqualTo(DEFAULT_NAME);
         assertThat(testWishlist.getCreationDate()).isEqualTo(DEFAULT_CREATION_DATE);
         assertThat(testWishlist.isHidden()).isEqualTo(DEFAULT_HIDDEN);
+    }
+
+    @Test
+    @Transactional
+    public void createWishlistWithExistingId() throws Exception {
+        int databaseSizeBeforeCreate = wishlistRepository.findAll().size();
+
+        // Create the Wishlist with an existing ID
+        Wishlist existingWishlist = new Wishlist();
+        existingWishlist.setId(1L);
+
+        // An entity with an existing ID cannot be created, so this API call must fail
+        restWishlistMockMvc.perform(post("/api/wishlists")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(existingWishlist)))
+            .andExpect(status().isBadRequest());
+
+        // Validate the Alice in the database
+        List<Wishlist> wishlistList = wishlistRepository.findAll();
+        assertThat(wishlistList).hasSize(databaseSizeBeforeCreate);
     }
 
     @Test
@@ -125,12 +147,12 @@ public class WishlistResourceIntTest {
         // Create the Wishlist, which fails.
 
         restWishlistMockMvc.perform(post("/api/wishlists")
-                .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                .content(TestUtil.convertObjectToJsonBytes(wishlist)))
-                .andExpect(status().isBadRequest());
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(wishlist)))
+            .andExpect(status().isBadRequest());
 
-        List<Wishlist> wishlists = wishlistRepository.findAll();
-        assertThat(wishlists).hasSize(databaseSizeBeforeTest);
+        List<Wishlist> wishlistList = wishlistRepository.findAll();
+        assertThat(wishlistList).hasSize(databaseSizeBeforeTest);
     }
 
     @Test
@@ -139,14 +161,14 @@ public class WishlistResourceIntTest {
         // Initialize the database
         wishlistRepository.saveAndFlush(wishlist);
 
-        // Get all the wishlists
+        // Get all the wishlistList
         restWishlistMockMvc.perform(get("/api/wishlists?sort=id,desc"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
-                .andExpect(jsonPath("$.[*].id").value(hasItem(wishlist.getId().intValue())))
-                .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME.toString())))
-                .andExpect(jsonPath("$.[*].creationDate").value(hasItem(DEFAULT_CREATION_DATE.toString())))
-                .andExpect(jsonPath("$.[*].hidden").value(hasItem(DEFAULT_HIDDEN.booleanValue())));
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
+            .andExpect(jsonPath("$.[*].id").value(hasItem(wishlist.getId().intValue())))
+            .andExpect(jsonPath("$.[*].name").value(hasItem(DEFAULT_NAME.toString())))
+            .andExpect(jsonPath("$.[*].creationDate").value(hasItem(DEFAULT_CREATION_DATE.toString())))
+            .andExpect(jsonPath("$.[*].hidden").value(hasItem(DEFAULT_HIDDEN.booleanValue())));
     }
 
     @Test
@@ -170,7 +192,7 @@ public class WishlistResourceIntTest {
     public void getNonExistingWishlist() throws Exception {
         // Get the wishlist
         restWishlistMockMvc.perform(get("/api/wishlists/{id}", Long.MAX_VALUE))
-                .andExpect(status().isNotFound());
+            .andExpect(status().isNotFound());
     }
 
     @Test
@@ -188,17 +210,35 @@ public class WishlistResourceIntTest {
                 .hidden(UPDATED_HIDDEN);
 
         restWishlistMockMvc.perform(put("/api/wishlists")
-                .contentType(TestUtil.APPLICATION_JSON_UTF8)
-                .content(TestUtil.convertObjectToJsonBytes(updatedWishlist)))
-                .andExpect(status().isOk());
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(updatedWishlist)))
+            .andExpect(status().isOk());
 
         // Validate the Wishlist in the database
-        List<Wishlist> wishlists = wishlistRepository.findAll();
-        assertThat(wishlists).hasSize(databaseSizeBeforeUpdate);
-        Wishlist testWishlist = wishlists.get(wishlists.size() - 1);
+        List<Wishlist> wishlistList = wishlistRepository.findAll();
+        assertThat(wishlistList).hasSize(databaseSizeBeforeUpdate);
+        Wishlist testWishlist = wishlistList.get(wishlistList.size() - 1);
         assertThat(testWishlist.getName()).isEqualTo(UPDATED_NAME);
         assertThat(testWishlist.getCreationDate()).isEqualTo(UPDATED_CREATION_DATE);
         assertThat(testWishlist.isHidden()).isEqualTo(UPDATED_HIDDEN);
+    }
+
+    @Test
+    @Transactional
+    public void updateNonExistingWishlist() throws Exception {
+        int databaseSizeBeforeUpdate = wishlistRepository.findAll().size();
+
+        // Create the Wishlist
+
+        // If the entity doesn't have an ID, it will be created instead of just being updated
+        restWishlistMockMvc.perform(put("/api/wishlists")
+            .contentType(TestUtil.APPLICATION_JSON_UTF8)
+            .content(TestUtil.convertObjectToJsonBytes(wishlist)))
+            .andExpect(status().isCreated());
+
+        // Validate the Wishlist in the database
+        List<Wishlist> wishlistList = wishlistRepository.findAll();
+        assertThat(wishlistList).hasSize(databaseSizeBeforeUpdate + 1);
     }
 
     @Test
@@ -210,11 +250,16 @@ public class WishlistResourceIntTest {
 
         // Get the wishlist
         restWishlistMockMvc.perform(delete("/api/wishlists/{id}", wishlist.getId())
-                .accept(TestUtil.APPLICATION_JSON_UTF8))
-                .andExpect(status().isOk());
+            .accept(TestUtil.APPLICATION_JSON_UTF8))
+            .andExpect(status().isOk());
 
         // Validate the database is empty
-        List<Wishlist> wishlists = wishlistRepository.findAll();
-        assertThat(wishlists).hasSize(databaseSizeBeforeDelete - 1);
+        List<Wishlist> wishlistList = wishlistRepository.findAll();
+        assertThat(wishlistList).hasSize(databaseSizeBeforeDelete - 1);
+    }
+
+    @Test
+    public void equalsVerifier() throws Exception {
+        TestUtil.equalsVerifier(Wishlist.class);
     }
 }

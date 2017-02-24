@@ -20,7 +20,7 @@ public class Wishlist implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotNull
@@ -105,7 +105,7 @@ public class Wishlist implements Serializable {
             return false;
         }
         Wishlist wishlist = (Wishlist) o;
-        if(wishlist.id == null || id == null) {
+        if (wishlist.id == null || id == null) {
             return false;
         }
         return Objects.equals(id, wishlist.id);

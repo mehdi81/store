@@ -5,11 +5,12 @@
         .module('storeApp')
         .controller('WishController', WishController);
 
-    WishController.$inject = ['$scope', '$state', 'Wish', 'ParseLinks', 'AlertService', 'pagingParams', 'paginationConstants'];
+    WishController.$inject = ['Wish', 'ParseLinks', 'AlertService', 'paginationConstants', 'pagingParams'];
 
-    function WishController ($scope, $state, Wish, ParseLinks, AlertService, pagingParams, paginationConstants) {
+    function WishController(Wish, ParseLinks, AlertService, paginationConstants, pagingParams) {
+
         var vm = this;
-        
+
         vm.loadPage = loadPage;
         vm.predicate = pagingParams.predicate;
         vm.reverse = pagingParams.ascending;
@@ -43,12 +44,12 @@
             }
         }
 
-        function loadPage (page) {
+        function loadPage(page) {
             vm.page = page;
             vm.transition();
         }
 
-        function transition () {
+        function transition() {
             $state.transitionTo($state.$current, {
                 page: vm.page,
                 sort: vm.predicate + ',' + (vm.reverse ? 'asc' : 'desc'),

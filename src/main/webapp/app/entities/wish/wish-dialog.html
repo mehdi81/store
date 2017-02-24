@@ -17,7 +17,7 @@
             <label class="control-label" data-translate="storeApp.wish.productId" for="field_productId">Product Id</label>
             <input type="number" class="form-control" name="productId" id="field_productId"
                     ng-model="vm.wish.productId"
-                    required />
+                    required/>
             <div ng-show="editForm.productId.$invalid">
                 <p class="help-block"
                     ng-show="editForm.productId.$error.required" data-translate="entity.validation.required">
@@ -33,7 +33,7 @@
             <label class="control-label" data-translate="storeApp.wish.price" for="field_price">Price</label>
             <input type="number" class="form-control" name="price" id="field_price"
                     ng-model="vm.wish.price"
-                    required min="0" />
+                    required min="0"/>
             <div ng-show="editForm.price.$invalid">
                 <p class="help-block"
                     ng-show="editForm.price.$error.required" data-translate="entity.validation.required">
@@ -41,7 +41,7 @@
                 </p>
                 <p class="help-block"
                     ng-show="editForm.price.$error.min" data-translate="entity.validation.min" translate-value-min="0">
-                    This field should be more than 0.
+                    This field should be at least 0.
                 </p>
                 <p class="help-block"
                     ng-show="editForm.price.$error.number" data-translate="entity.validation.number">

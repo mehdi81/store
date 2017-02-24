@@ -16,7 +16,6 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import javax.inject.Inject;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
@@ -24,13 +23,16 @@ import javax.validation.Valid;
 @RequestMapping("/api")
 public class UserJWTController {
 
-    @Inject
-    private TokenProvider tokenProvider;
+    private final TokenProvider tokenProvider;
 
-    @Inject
-    private AuthenticationManager authenticationManager;
+    private final AuthenticationManager authenticationManager;
 
-    @RequestMapping(value = "/authenticate", method = RequestMethod.POST)
+    public UserJWTController(TokenProvider tokenProvider, AuthenticationManager authenticationManager) {
+        this.tokenProvider = tokenProvider;
+        this.authenticationManager = authenticationManager;
+    }
+
+    @PostMapping("/authenticate")
     @Timed
     public ResponseEntity<?> authorize(@Valid @RequestBody LoginVM loginVM, HttpServletResponse response) {
 

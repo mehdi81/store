@@ -52,7 +52,7 @@
             }
         })
         .state('wish-detail', {
-            parent: 'entity',
+            parent: 'wish',
             url: '/wish/{id}',
             data: {
                 authorities: ['ROLE_USER'],
